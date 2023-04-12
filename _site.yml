@@ -4,10 +4,13 @@ navbar:
   title: "JSC370 Final Project"
   left:
     - text: "Home"
+      icon: fa-home
       href: index.html
     - text: "Visualization"
+      icon: fa-bar-chart fa-lg
       href: visualization.html
     - text: "Data Website"
+      icon: fa-database fa-lg
       menu:
         - text: "Toronto Police Service Data Portal"
         - text: "Shootings and Firearm Discharges"
@@ -24,6 +27,9 @@ navbar:
           href: https://www.toronto.ca/city-government/data-research-maps/toronto-economy-labour-force-demographics/toronto-economic-dashboard/#detail/1.22
         - text: "Unemployment Rates"
           href: https://www.toronto.ca/city-government/data-research-maps/toronto-economy-labour-force-demographics/toronto-economic-dashboard/#detail/1.02
+    - text: "Report"
+      icon: fa-file-pdf-o fa-lg
+      href: resources/files/Report.pdf
   right:
     - icon: fa-github fa-lg
       href: https://github.com/Chan-Y/JSC370_Final_Project/
