@@ -18,6 +18,7 @@ navbar:
           href: https://data.torontopolice.on.ca/datasets/TorontoPS::auto-theft-open-data/about
         - text: "Robbery"
           href: https://data.torontopolice.on.ca/datasets/TorontoPS::robbery-open-data/about
+        - text: '---------'
         - text: "City of Toronto"
         - text: "Inflation Rate"
           href: https://www.toronto.ca/city-government/data-research-maps/toronto-economy-labour-force-demographics/toronto-economic-dashboard/#detail/1.22
