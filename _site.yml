@@ -9,15 +9,15 @@ navbar:
       href: visualization.html
     - text: "Data Website"
       menu:
-        - text: "Toronto Police Service Public Safety Data Portal"
+        - text: "Toronto Police Service Data Portal"
         - text: "Shootings and Firearm Discharges"
-          href: https://data.torontopolice.on.ca/datasets/TorontoPS::shootings-and-firearm-discharges/about
+          href: https://data.torontopolice.on.ca/datasets/TorontoPS::shooting-and-firearm-discharges-open-data/about
         - text: "Break and Enter"
-          href: https://data.torontopolice.on.ca/datasets/TorontoPS::break-and-enter-1/about
+          href: https://data.torontopolice.on.ca/datasets/TorontoPS::break-and-enter-open-data/about
         - text: "Auto Theft"
-          href: https://data.torontopolice.on.ca/datasets/TorontoPS::auto-theft-1/about
+          href: https://data.torontopolice.on.ca/datasets/TorontoPS::auto-theft-open-data/about
         - text: "Robbery"
-          href: https://data.torontopolice.on.ca/datasets/TorontoPS::robbery-1/about
+          href: https://data.torontopolice.on.ca/datasets/TorontoPS::robbery-open-data/about
         - text: "City of Toronto"
         - text: "Inflation Rate"
           href: https://www.toronto.ca/city-government/data-research-maps/toronto-economy-labour-force-demographics/toronto-economic-dashboard/#detail/1.22
