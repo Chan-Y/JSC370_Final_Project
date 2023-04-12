@@ -9,10 +9,10 @@
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
-<meta name="author" content="Chan Yu" />
 
+<meta name="date" content="2023-04-12" />
 
-<title>JSC370 Final Project</title>
+<title>Criminal Statistics in Toronto</title>
 
 <script src="site_libs/header-attrs-2.18/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
@@ -30,9 +30,6 @@
        h6 {font-size: 12px;}
        code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
        pre:not([class]) { background-color: white }</style>
-<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
-<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
-<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
 <link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
@@ -226,69 +223,6 @@ $(document).ready(function () {
 
 
 
-<style type="text/css">
-
-#TOC {
-  margin: 25px 0px 20px 0px;
-}
-@media (max-width: 768px) {
-#TOC {
-  position: relative;
-  width: 100%;
-}
-}
-
-@media print {
-.toc-content {
-  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
-  float: right;
-}
-}
-
-.toc-content {
-  padding-left: 30px;
-  padding-right: 40px;
-}
-
-div.main-container {
-  max-width: 1200px;
-}
-
-div.tocify {
-  width: 20%;
-  max-width: 260px;
-  max-height: 85%;
-}
-
-@media (min-width: 768px) and (max-width: 991px) {
-  div.tocify {
-    width: 25%;
-  }
-}
-
-@media (max-width: 767px) {
-  div.tocify {
-    width: 100%;
-    max-width: none;
-  }
-}
-
-.tocify ul, .tocify li {
-  line-height: 20px;
-}
-
-.tocify-subheader .tocify-item {
-  font-size: 0.90em;
-}
-
-.tocify .list-group-item {
-  border-radius: 0px;
-}
-
-
-</style>
-
-
 
 </head>
 
@@ -296,16 +230,6 @@ div.tocify {
 
 
 <div class="container-fluid main-container">
-
-
-<!-- setup 3col/9col grid for toc_float and main content  -->
-<div class="row">
-<div class="col-xs-12 col-sm-4 col-md-3">
-<div id="TOC" class="tocify">
-</div>
-</div>
-
-<div class="toc-content col-xs-12 col-sm-8 col-md-9">
 
 
 
@@ -335,26 +259,26 @@ div.tocify {
     <span class="caret"></span>
   </a>
   <ul class="dropdown-menu" role="menu">
+    <li class="dropdown-header">Toronto Police Service Data Portal</li>
     <li>
-      <a></a>
+      <a href="https://data.torontopolice.on.ca/datasets/TorontoPS::shooting-and-firearm-discharges-open-data/about">Shootings and Firearm Discharges</a>
     </li>
     <li>
-      <a></a>
+      <a href="https://data.torontopolice.on.ca/datasets/TorontoPS::break-and-enter-open-data/about">Break and Enter</a>
     </li>
     <li>
-      <a></a>
+      <a href="https://data.torontopolice.on.ca/datasets/TorontoPS::auto-theft-open-data/about">Auto Theft</a>
     </li>
     <li>
-      <a></a>
+      <a href="https://data.torontopolice.on.ca/datasets/TorontoPS::robbery-open-data/about">Robbery</a>
+    </li>
+    <li class="divider"></li>
+    <li class="dropdown-header">City of Toronto</li>
+    <li>
+      <a href="https://www.toronto.ca/city-government/data-research-maps/toronto-economy-labour-force-demographics/toronto-economic-dashboard/#detail/1.22">Inflation Rate</a>
     </li>
     <li>
-      <a></a>
-    </li>
-    <li>
-      <a></a>
-    </li>
-    <li>
-      <a></a>
+      <a href="https://www.toronto.ca/city-government/data-research-maps/toronto-economy-labour-force-demographics/toronto-economic-dashboard/#detail/1.02">Unemployment Rates</a>
     </li>
   </ul>
 </li>
@@ -378,63 +302,58 @@ div.tocify {
 
 
 
-<h1 class="title toc-ignore">JSC370 Final Project</h1>
-<h4 class="author">Chan Yu</h4>
+<h1 class="title toc-ignore">Criminal Statistics in Toronto</h1>
+<h4 class="date">April 12, 2023</h4>
 
 </div>
 
 
-<p><br></p>
-<p>This is my JSC370 Final Project website. I will showcase a few
-interactive visuals here.</p>
-<p><br></p>
-<style type="text/css">
-.code-r { /* Code block */
-  font-size: 15px;
-}
-
-.code-r-small { /* Code block */
-  font-size: 10px;
-}
-</style>
-<p><br></p>
-<div id="first-step" class="section level2">
-<h2>First step</h2>
-<p>First I will source any necessary code,
-e.g. <code>process_covid_data.R</code>:</p>
-<pre class="r code-r"><code># source(&quot;process_COVID_data.R&quot;)</code></pre>
-<p><br></p>
-</div>
-<div id="second-step" class="section level2">
-<h2>Second step</h2>
-<p>Then I will add some code to create the <strong>plotly</strong>
-figures</p>
-<p>Note: You need to name each code chunk, like this one:
-<code>plot1</code></p>
-<p><br></p>
-</div>
-<div id="third-step" class="section level2 tabset">
-<h2 class="tabset">Third step</h2>
-<p>Create tabs to display each figure</p>
-<div id="scatterplot-with-dc" class="section level3">
-<h3>Scatterplot: with DC</h3>
-</div>
-<div id="scatterplot-without-dc" class="section level3">
-<h3>Scatterplot: without DC</h3>
-</div>
-<div id="wo-dc-log-transformed" class="section level3">
-<h3>W/O DC Log transformed</h3>
-<p><br></p>
-<p>Done!</p>
 <p><br> <br></p>
-</div>
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<!-- (provide background on your dataset and a clear formulated question or hypothesis) -->
+<p>Crime is a common social problem that affects communities worldwide.
+In Canada, Toronto has been the city with the highest crime rate, which
+includes violent and property crimes. The Toronto Police Service is the
+agency responsible for enforcing the law in the city, and it publishes
+criminal data on the <a href="https://data.torontopolice.on.ca/">Public
+Safety Data Portal</a>. This data includes information on the type of
+crime, location, and date of occurrence.</p>
+<p><br></p>
+<p>The inflation and unemployment rates are two economic indicators that
+reflect the financial well-being of a community. Inflation refers to the
+rate at which the general level of prices for goods and services is
+rising, and unemployment refers to the percentage of people who are not
+employed but are actively seeking work. Both indicators can have a
+significant impact on the daily lives of people, including their safety
+and security.</p>
+<p><br></p>
+<p>The purpose of this project is to analyze the crime statistics in the
+city of Toronto from 2014 to 2021, and investigate whether there is a
+correlation between the number of crimes in Toronto and changes in the
+inflation and unemployment rates over time. To achieve this, we will
+explore the crime data provided by the Toronto Police Service and
+compare it to the monthly <a
+href="https://www.toronto.ca/city-government/data-research-maps/toronto-economy-labour-force-demographics/toronto-economic-dashboard/#detail/1.22">inflation
+rate</a> and <a
+href="https://www.toronto.ca/city-government/data-research-maps/toronto-economy-labour-force-demographics/toronto-economic-dashboard/#detail/1.02">unemployment
+rates</a> obtained from the website of City of Toronto between January
+2018 and January 2023. This analysis aims to shed light on the
+relationship between economic conditions and crime in Toronto, which can
+inform policies and strategies to improve public safety in the city.</p>
+<p><br></p>
+<p>In this project, we will provide an overview of the crime situation
+in the city of Toronto, including the types of crimes and their
+frequency. We will also discuss the inflation and unemployment rates in
+the city and how they have changed over time. Finally, we will present
+the results of our analysis and discuss the implications of the
+findings.</p>
+<p><br> <br> <br></p>
 </div>
 
 <p>Copyright &copy; 2023. Chan Yu.</p>
 
 
-</div>
-</div>
 
 </div>
 
@@ -467,35 +386,6 @@ $(document).ready(function () {
 
 <!-- code folding -->
 
-<script>
-$(document).ready(function ()  {
-
-    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
-    $('.unlisted.unnumbered').addClass('toc-ignore')
-
-    // move toc-ignore selectors from section div to header
-    $('div.section.toc-ignore')
-        .removeClass('toc-ignore')
-        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
-
-    // establish options
-    var options = {
-      selectors: "h1,h2,h3",
-      theme: "bootstrap3",
-      context: '.toc-content',
-      hashGenerator: function (text) {
-        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
-      },
-      ignoreSelector: ".toc-ignore",
-      scrollTo: 0
-    };
-    options.showAndHide = true;
-    options.smoothScroll = true;
-
-    // tocify
-    var toc = $("#TOC").tocify(options).data("toc-tocify");
-});
-</script>
 
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>

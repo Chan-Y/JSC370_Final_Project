@@ -33,3 +33,8 @@ img-circle {
 code { /* Code block */
     font-size: 15px;
 }
+
+a:hover {
+ color: white; /* darker color when hovering */;
+ background-color: darkolivegreen;
+}

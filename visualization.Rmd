@@ -1,18 +1,13 @@
 ---
-title: "JSC370 Final Project"
-author: "Chan Yu"
+title: "Interactive Visualizations"
+subtitle: "For Assignment 5"
 output: 
     html_document:
         toc: TRUE
         toc_float: TRUE
 ---
 
-<br>
-
-This is visualization page
-<br>
-
-```{r setup, message=FALSE, echo=FALSE, warning=FALSE}
+```{r setup, message=FALSE, echo=FALSE, include=FALSE, eval=TRUE, warning=FALSE}
 
 library(data.table)
 library(tidyverse)
@@ -47,9 +42,19 @@ opts_chunk$set(
 
 <br>
 
+This is my JSC370 Final Project website. I will showcase a few interactive visuals here.
+
+<br>
+
+<br>
+
 ## First step
 
 First I will source any necessary code, e.g. `process_covid_data.R`:
+
+```{r load-data}
+# source("process_COVID_data.R")
+```
 
 <br>
 
@@ -57,9 +62,37 @@ First I will source any necessary code, e.g. `process_covid_data.R`:
 
 Then I will add some code to create the **plotly** figures
 
+Note: You need to name each code chunk, like this one: `plot1`
+
+```{r plot1, class.source="code-r-small"}
+
+
+
+```
+
 <br>
 
-## Third step 
+## Third step {.tabset}
+
+Create tabs to display each figure
+
+### Scatterplot: with DC
+
+```{r p1}
+
+```
+
+### Scatterplot: without DC
+
+```{r p2}
+
+```
+
+### W/O DC Log transformed
+```{r}
+
+```
+
 
 <br>
 

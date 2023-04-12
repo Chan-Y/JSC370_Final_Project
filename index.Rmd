@@ -1,102 +1,33 @@
 ---
-title: "JSC370 Final Project"
-author: "Chan Yu"
+title: "Criminal Statistics in Toronto"
+date: "`r format(Sys.time(), '%B %d, %Y')`" # 2023-04-10
 output: 
-    html_document:
-        toc: TRUE
-        toc_float: TRUE
+    html_document
 ---
 
-<br>
-
-This is my JSC370 Final Project website. I will showcase a few interactive visuals here.
 
 <br>
+<br>
 
-```{r setup, message=FALSE, echo=FALSE, warning=FALSE}
+# Introduction
 
-library(data.table)
-library(tidyverse)
-library(dplyr)
-library(plotly)
-library(DT)
-library(knitr)
-
-# Initialize code chunk options
-opts_chunk$set(
-  warning = FALSE,
-  message = FALSE,
-  eval=TRUE,
-  echo = TRUE,
-  cache = FALSE,
-  fig.width = 7, 
-  fig.align = 'center',
-  fig.asp = 0.618,
-  out.width = "700px",
-  class.source = "code-r")
-```
-
-```{css, echo = FALSE}
-.code-r { /* Code block */
-  font-size: 15px;
-}
-
-.code-r-small { /* Code block */
-  font-size: 10px;
-}
-```
+Crime is a common social problem that affects communities worldwide. In Canada, Toronto has been the city with the highest crime rate, which includes violent and property crimes. The Toronto Police Service is the agency responsible for enforcing the law in the city, and it publishes criminal data on the [Public Safety Data Portal](https://data.torontopolice.on.ca/). This data includes information on the type of crime, location, and date of occurrence.
 
 <br>
 
-## First step
-
-First I will source any necessary code, e.g. `process_covid_data.R`:
-
-```{r load-data}
-# source("process_COVID_data.R")
-```
+The inflation and unemployment rates are two economic indicators that reflect the financial well-being of a community. Inflation refers to the rate at which the general level of prices for goods and services is rising, and unemployment refers to the percentage of people who are not employed but are actively seeking work. Both indicators can have a significant impact on the daily lives of people, including their safety and security.
 
 <br>
 
-## Second step
-
-Then I will add some code to create the **plotly** figures
-
-Note: You need to name each code chunk, like this one: `plot1`
-
-```{r plot1, class.source="code-r-small"}
-
-
-
-```
+The purpose of this project is to analyze the crime statistics in the city of Toronto from 2014 to 2021, and investigate whether there is a correlation between the number of crimes in Toronto and changes in the inflation and unemployment rates over time. To achieve this, we will explore the crime data provided by the Toronto Police Service and compare it to the monthly [inflation rate](https://www.toronto.ca/city-government/data-research-maps/toronto-economy-labour-force-demographics/toronto-economic-dashboard/#detail/1.22) and [unemployment rates](https://www.toronto.ca/city-government/data-research-maps/toronto-economy-labour-force-demographics/toronto-economic-dashboard/#detail/1.02) obtained from the website of City of Toronto between January 2018 and January 2023. This analysis aims to shed light on the relationship between economic conditions and crime in Toronto, which can inform policies and strategies to improve public safety in the city.
 
 <br>
 
-## Third step {.tabset}
+Overall, we will provide an overview of the crime situation in the city of Toronto, including the types of crimes and their frequency. We will also discuss the inflation and unemployment rates in the city and how they have changed over time. Finally, we will present the results of our analysis and discuss the implications of the findings.
 
-Create tabs to display each figure
 
-### Scatterplot: with DC
-
-```{r p1}
-
-```
-
-### Scatterplot: without DC
-
-```{r p2}
-
-```
-
-### W/O DC Log transformed
-```{r}
-
-```
 
 
 <br>
-
-Done!
-
 <br>
 <br>
