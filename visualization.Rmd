@@ -6,7 +6,14 @@ output:
         toc: TRUE
         toc_float: TRUE
 ---
-```{r setup, message=FALSE, warning=FALSE}
+
+<br>
+
+This is visualization page
+<br>
+
+```{r setup, message=FALSE, echo=FALSE, warning=FALSE}
+
 library(data.table)
 library(tidyverse)
 library(dplyr)
@@ -28,13 +35,6 @@ opts_chunk$set(
   class.source = "code-r")
 ```
 
-
-<br>
-
-This is second tab not test.
-
-<br>
-
 ```{css, echo = FALSE}
 .code-r { /* Code block */
   font-size: 15px;
@@ -44,3 +44,26 @@ This is second tab not test.
   font-size: 10px;
 }
 ```
+
+<br>
+
+## First step
+
+First I will source any necessary code, e.g. `process_covid_data.R`:
+
+<br>
+
+## Second step
+
+Then I will add some code to create the **plotly** figures
+
+<br>
+
+## Third step 
+
+<br>
+
+Done!
+
+<br>
+<br>
