@@ -1,0 +1,22 @@
+name: "JSC370_Final_Project"
+output_dir: "."
+navbar:
+  title: "JSC370 Final Project"
+  left:
+    - text: "Home"
+      href: index.html
+    - text: "Visualization"
+      href: pages/visualization.html
+    - text: "TEST"
+      href: visualization.html
+  right:
+    - icon: fa-github fa-lg
+      href: https://github.com/JSC370/jsc370-2023/
+    - text: "JSC370 Home"
+      href: https://jsc370.github.io/jsc370-2023/
+output:
+  html_document:
+    theme: cosmo
+    include:
+      after_body: pages/footer.html
+    css: resources/css/styles.css
