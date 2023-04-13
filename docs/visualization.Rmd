@@ -8,7 +8,6 @@ output:
 ---
 
 ```{r setup, message=FALSE, echo=FALSE, include=FALSE, eval=TRUE, warning=FALSE}
-
 library(data.table)
 library(tidyverse)
 library(dplyr)
@@ -40,6 +39,10 @@ opts_chunk$set(
 }
 ```
 
+
+```{r load-data, include=FALSE, eval=TRUE}
+source("resources/data/process_data.R")
+```
 <br>
 
 This is my JSC370 Final Project website. I will showcase a few interactive visuals here.
@@ -47,14 +50,6 @@ This is my JSC370 Final Project website. I will showcase a few interactive visua
 <br>
 
 <br>
-
-## First step
-
-First I will source any necessary code, e.g. `process_covid_data.R`:
-
-```{r load-data}
-# source("process_COVID_data.R")
-```
 
 <br>
 
@@ -64,10 +59,57 @@ Then I will add some code to create the **plotly** figures
 
 Note: You need to name each code chunk, like this one: `plot1`
 
-```{r plot1, class.source="code-r-small"}
+```{r plots, include=FALSE, eval=TRUE}
+count_by_month_cat <- data %>% 
+  group_by(year, month_num, crime_cat) %>% 
+  summarise(
+    count = length(unique(event_unique_id))
+  )
+
+plt1 <- count_by_month_cat %>% 
+  mutate(
+    month = ym(paste0(year, '-', month_num))
+  ) %>% 
+  group_by(month) %>% 
+  summarise(
+    count = sum(count)
+  ) %>% 
+  inner_join(merged_rate, by=c("month" = "month_date")) %>% 
+  ggplot(aes(x = month, y = count)) +
+  geom_bar(stat = "identity", fill = "lightblue")+
+  theme_classic()+
+  geom_line(aes(x = month, y = inflation * 100, group = 1, color = "Inflation")) +
+  geom_point(aes(x = month, y = inflation * 100, color = "Inflation"), size = 2) +
+  geom_line(aes(x = month, y = unemployment * 100, group = 1, color = "Unemployment")) +
+  geom_point(aes(x = month, y = unemployment * 100, color = "Unemployment"), size = 2) +
+  scale_color_manual(values = c("Inflation" = "blue", "Unemployment" = "red"), 
+                     name = "Rates", labels = c("Inflation", "Unemployment")) +
+  labs(
+    title = "Number of Crime Occurrence over Time",
+    x = "Year", y = "Number of Crimes"
+  ) +
+  scale_y_continuous(
+    name = "Number of Crimes",
+    sec.axis = sec_axis(~ . / 100, name = "Rates (%)" )
+  )
 
 
-
+# Top 10 for each crime category
+plt2 <- data %>%
+  group_by(neighbourhood, crime_cat) %>% 
+  summarise(
+    count = length(unique(event_unique_id))
+  ) %>% 
+  group_by(crime_cat) %>%
+  slice_max(count, n = 5)  %>% 
+  ggplot(aes(neighbourhood, y=count)) +
+  geom_bar(stat="identity", fill = "lightblue") +
+  facet_wrap(~crime_cat, scales = "free_y") +
+  theme_minimal() +
+  coord_flip() +
+  labs(title = "Barplot of Crime Occurrence by Neighbourhood", 
+       subtitle = "Focus on top 5 neighbours in each crime category",
+       x  = "Neighbourhood", y = "Number of Crime Occurrence")
 ```
 
 <br>
@@ -78,14 +120,14 @@ Create tabs to display each figure
 
 ### Scatterplot: with DC
 
-```{r p1}
-
+```{r plt1, echo=FALSE}
+plt1
 ```
 
 ### Scatterplot: without DC
 
-```{r p2}
-
+```{r plt2, echo=FALSE}
+plt2
 ```
 
 ### W/O DC Log transformed
