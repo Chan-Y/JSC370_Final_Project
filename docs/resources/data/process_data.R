@@ -180,10 +180,10 @@ crime_data <- crime_data %>%
     year >= 2014,
     year <= 2021,
     longitude <= -79,
-    longitude >= 
+    longitude >=
       quantile(longitude, .25, na.rm=TRUE) - IQR(longitude, na.rm=TRUE)*1.5,
     latitude <= 43.85,
-    latitude >= 
+    latitude >=
       quantile(latitude, .25, na.rm=TRUE) - IQR(latitude, na.rm=TRUE)*1.5
   )
 
@@ -191,13 +191,13 @@ crime_data <- crime_data %>%
 ### Load in data for inflation and unemployment rate 
 # Inflation
 inflation <-
-  read_csv('https://raw.githubusercontent.com/Chan-Y/PublicDataset/main/Inflation_(%25).csv')
+  read_csv('https://raw.githubusercontent.com/Chan-Y/JSC370_Final_Project/main/docs/resources/data/Inflation_(%25).csv')
 # Rename column names
 names(inflation) <- c('month', 'rate')
 
 # Unemployment 
 unemployment <-
-  read_csv('https://raw.githubusercontent.com/Chan-Y/PublicDataset/main/Unemployment_Rate_(%25).csv')
+  read_csv('https://raw.githubusercontent.com/Chan-Y/JSC370_Final_Project/main/docs/resources/data/Unemployment_Rate_(%25).csv')
 # Rename column names
 names(unemployment) <- c('month', 'rate')
 
@@ -217,3 +217,26 @@ rate_data <- rate_data %>%
     year = year(month),
     month = month(month)
   ) 
+
+
+
+### Load neighbourhoods data
+# library(sf)
+# neighbor_data <- st_read("resources/data/Neighbourhoods.geojson")
+
+library(opendatatoronto)
+library(dplyr)
+
+# get all resources for this package
+resources <- list_package_resources("neighbourhoods")
+
+# identify datastore resources; 
+# by default, Toronto Open Data sets datastore resource format to CSV 
+#   for non-geospatial and GeoJSON for geospatial resources
+datastore_resources <- filter(resources, tolower(format) %in% c('csv', 'geojson'))
+
+# load the first datastore resource as a sample
+neighbor_data <- filter(datastore_resources, row_number()==1) %>% get_resource()
+
+# Add hood_id column to merge with crime_data
+neighbor_data$hood_id <- as.integer(neighbor_data$AREA_SHORT_CODE)

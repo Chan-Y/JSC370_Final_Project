@@ -5,7 +5,7 @@ output:
     html_document:
         toc: TRUE
         toc_float: TRUE
-        code_folding: show
+        code_folding: hide
 ---
 
 ```{r setup, message=FALSE, echo=FALSE, include=FALSE, eval=TRUE, warning=FALSE}
@@ -17,6 +17,7 @@ library(DT)
 library(knitr)
 library(mapboxapi)
 library(leaflet)
+library(sf)
 
 # Initialize code chunk options
 opts_chunk$set(
@@ -25,10 +26,10 @@ opts_chunk$set(
   eval=TRUE,
   echo = TRUE,
   cache = FALSE,
-  # fig.width = 8, 
+  fig.width = 8,
   fig.align = 'center',
-  # fig.asp = 0.618,
-  # out.width = "700px",
+  fig.asp = 0.618,
+  out.width = "700px",
   class.source = "code-r")
 ```
 
@@ -47,21 +48,217 @@ opts_chunk$set(
 ```{r load-data, include=FALSE, eval=TRUE}
 source("resources/data/process_data.R")
 ```
+
+Here are some interactive visualizations that showcase the occurrence of crime in different neighborhoods over time based on the observations.
+
 <br>
 
-This is my JSC370 Final Project website. I will showcase a few interactive visuals here.
 
-<br>
+## Mapview of Crime Occurrence {.tabset}
+
+### Neighbourhood Scatters
+<!-- 
+https://plotly.com/r/scattermapbox/
+https://plotly-r.com/maps.html
+https://rstudio-pubs-static.s3.amazonaws.com/990225_5ed3a88ab43248dca24eaa8d4ecda370.html 
+-->
+```{r mapview1, class.source='foldable'}
+# Group crime data by neighborhood
+crime_by_neighb <- crime_data %>% 
+  group_by(hood_id) %>% 
+  summarise(
+    longitude = mean(longitude),
+    latitude = mean(latitude),
+    neighbourhood = first(neighbourhood),
+    counts = length(unique(event_unique_id))
+  )
+
+# Read in Mapbox access token
+MAPBOX_TOKEN <- paste(readLines("resources/files/.mb_token"), collapse="") 
+Sys.setenv('MAPBOX_TOKEN' = MAPBOX_TOKEN)
+
+# Plot mapview
+plot_mapbox(
+    mode = 'scattermapbox'
+  ) %>%
+  add_markers(
+    data = crime_by_neighb,
+    y = ~ latitude,
+    x = ~ longitude,
+    size = ~ counts,
+    sizemode = "area",
+    color = ~ neighbourhood,
+    hoverinfo = "text",
+    text = ~ paste(neighbourhood, ":", counts, "times")
+  ) %>% 
+  layout(
+    title = list(
+      text = "Mapview of Crime Frequency in Neighborhoods",
+      font = list(size = 16, color = "white"),
+      y = 0.95, x = 0.5,
+      xanchor = 'center', yanchor = 'top'
+    ),
+    mapbox = list(
+      style = 'dark', zoom = 9,
+      center = list(lat = median(crime_by_neighb$latitude),
+                    lon = median(crime_by_neighb$longitude))
+    ),
+    # legend = list(orientation = 'h'),
+    showlegend = FALSE
+  ) 
+
+```
+
+### Neighbourhood Polygons
+<!-- https://rstudio.github.io/leaflet/popups.html -->
+
+```{r mapview2, class.source='foldable'}
+# Generate geometry point for each obs
+crime_filtered <- crime_data %>%
+  st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
+
+# Aggregate data by neighborhood
+crime_by_neighb_sf <- st_join(crime_filtered, neighbor_data, join = st_intersects) %>%
+  group_by(AREA_NAME) %>%
+  summarize(counts = length(unique(event_unique_id)))
+
+# Merge neighborhood_data and crime_data
+crime_by_neighb_sf <- st_join(neighbor_data, crime_by_neighb_sf)
+
+# Create a leaflet map
+pal <- colorNumeric(palette = "Blues", domain = crime_by_neighb_sf$counts)
+crime_by_neighb_sf %>% 
+  leaflet() %>%
+  addProviderTiles("CartoDB.Positron") %>%
+  addPolygons(fillColor = ~pal(counts),
+              fillOpacity = .6,
+              color = "grey",
+              weight = .5,
+              label = ~paste(AREA_NAME.x, ":", counts, "times"),
+              labelOptions = labelOptions(
+                style = list("font-size" = "12px")
+              )) %>%
+  addLegend(position = "bottomright", 
+            title = "Number of Crimes",
+            pal = pal, values = crime_by_neighb_sf$counts) 
+```
 
 
 
-## R Code {.tabset}
 
-### Lineplot for Rates
+
+## {- .unlisted}
+
+
+- In previous observations, it was noted that shooting and firearm discharge incidents tend to be concentrated around the outskirts of the city, while auto theft incidents occur throughout Toronto but are more prevalent in the northwest region. On the other hand, break-and-enter and robbery incidents are predominantly concentrated in the downtown area of Toronto, where population density is relatively high. 
+
+- These patterns can be observed from the map polygons, with the darkest shade indicating the highest number of crimes in the northwest region due to auto theft, and a relatively higher number of crimes in the downtown area of Toronto. In contrast, areas with low population density show lighter shade on the map indicating fewer crimes. 
+
+- The scatter plots provide a more accurate representation of the average location of all crimes that occurred in each neighborhood area. The size of the scatter plots corresponds to the number of crimes, with larger scatter plots indicating higher crime counts. Similarly, larger scatter plots are observed in the northwest region and downtown area, indicating higher crime levels in these areas.
+
+
+
+
+```{r include=FALSE}
+library(mapboxapi)
+mb_access_token(MAPBOX_TOKEN)
+library(leaflet)
+
+walk_5min <- mb_isochrone("City of Toronto",
+                          profile = "driving",
+                          time = 5,
+                          
+                          access_token = MAPBOX_TOKEN)
+
+leaflet(walk_5min) %>%
+  addMapboxTiles(style_id = "streets-v11",
+                 username = "mapbox",
+                 
+                 access_token = MAPBOX_TOKEN) %>%
+  addPolygons()
+
+
+```
+
+<br><hr><br><br>
+
+<!-- ## Crime Occurrence on Date -->
+<!-- ```{r class.source = 'foldable'} -->
+<!-- # balshdfadfj -->
+
+
+<!-- ``` -->
+
+<!-- - blah -->
+<!-- - blah -->
+<!-- - blah -->
+<!-- - blah -->
+
+
+<!-- <br><hr><br><br> -->
+
+## Crime Occurrence with Rates
+
+<!-- https://plotly.com/r/multiple-axes/ -->
 
 ```{r class.source = 'foldable'}
+# Combine rates_data with aggregated monthly crime occurrence
+crime_by_mon <- crime_data %>% 
+  mutate(month = ym(paste0(year, '-', month_num))) %>% 
+  group_by(month) %>% 
+  summarise(
+    counts = length(unique(event_unique_id))
+  ) %>% 
+  inner_join(rate_data, by=c("month" = "month_date"))
+
+# Plot the bar+lines 
+crime_by_mon %>% 
+  plot_ly(
+    x = ~ month
+  ) %>% 
+  add_bars(
+    y = ~ counts, name = "Number of Crimes", 
+    marker = list(color = 'lightblue'),
+    hoverinfo = "text",
+    text = ~paste(
+      month.abb[month.y], year, "\n", "Num of Crimes %:", counts
+    )
+  ) %>%
+  add_lines(
+    y = ~ inflation, name = "Inflation Rate", yaxis = "y2",
+    hoverinfo = "text",
+    text = ~paste(
+      month.abb[month.y], year, "\n", "Inflation %:", inflation
+    )
+  ) %>% 
+  add_lines(
+    y = ~ unemployment, name = "Unemployment Rate", yaxis = "y2",
+    hoverinfo = "text",
+    text = ~paste(
+      month.abb[month.y], year, "\n", "Unemployment %:", unemployment
+    )
+  ) %>% 
+  layout(
+    hovermode = "x",
+    xaxis = list(title = "Date"),
+    yaxis = list(title = "Number of Crimes", side = "left"),
+    yaxis2 = list(
+      overlaying = "y",
+      side = "right",
+      title = "Rates (%)"
+    ),
+    title = list(
+      text = "Crime Occurrence vs Inflation/Unemployment Rates",
+      font = list(size = 18),
+      y = 0.95, x = 0.5, xanchor = 'center', yanchor = 'top'
+    ),
+    legend = list(x = 1.1, y = .8)
+  ) 
+```
+
+```{r include=FALSE}
 # Compare inflation and unemployment rate
-plt1 <- rate_data %>% 
+rate_data %>% 
   plot_ly(
     x = ~ month_date,
     hoverinfo = "text",
@@ -87,166 +284,53 @@ plt1 <- rate_data %>%
       y = 0.68
     )
   )
-```
 
 
-
-### Mapview
-```{r mapview, class.source='foldable', out.width="100%"}
-# Group crime data by neighborhood
-crime_by_neighb <- crime_data %>% 
-  group_by(hood_id) %>% 
+# Method 2: ggplotly()
+count_by_month_cat <- crime_data %>% 
+  group_by(year, month_num, crime_cat) %>% 
   summarise(
-    longitude = mean(longitude),
-    latitude = mean(latitude),
-    neighbourhood = unique(neighbourhood),
-    counts = length(unique(event_unique_id))
+    count = length(unique(event_unique_id))
   )
 
-# Read in Mapbox access token
-MAPBOX_TOKEN <- paste(readLines("resources/files/.mb_token"), collapse="") 
-
-# Plot mapview of nei
-plt2 <- plot_mapbox(
-    mode = 'scattermapbox'
-  ) %>%
-  add_markers(
-    data = crime_by_neighb,
-    y = ~ latitude,
-    x = ~ longitude,
-    size = ~ counts,
-    sizemode = "area",
-    color = ~ neighbourhood,
-    hoverinfo = "text",
-    text = ~ paste(
-      neighbourhood, ": ", counts, " times"
-    )
+barlineplt <- count_by_month_cat %>% 
+  mutate(
+    month = ym(paste0(year, '-', month_num))
   ) %>% 
-  layout(
-    title = list(
-      text = "Mapview of Crime Frequency in Neighborhoods",
-      font = list(size = 16, color = "white"),
-      y = 0.95, x = 0.5,
-      xanchor = 'center', yanchor = 'top'
-    ),
-    mapbox = list(
-      style = 'dark',
-      zoom = 9,
-      center = list(lat = median(crime_by_neighb$latitude),
-                    lon = median(crime_by_neighb$longitude))
-    ),
-    # legend = list(orientation = 'h'),
-    showlegend = FALSE
+  group_by(month) %>% 
+  summarise(
+    count = sum(count)
   ) %>% 
-  config(mapboxAccessToken = MAPBOX_TOKEN)
+  inner_join(rate_data, by=c("month" = "month_date")) %>% 
+  ggplot(aes(x = month, y = count)) +
+  geom_bar(stat = "identity", fill = "lightblue")+
+  theme_classic()+
+  geom_line(aes(x = month, y = inflation * 100, group = 1, color = "Inflation")) +
+  geom_point(aes(x = month, y = inflation * 100, color = "Inflation"), size = 2) +
+  geom_line(aes(x = month, y = unemployment * 100, group = 1, color = "Unemployment")) +
+  geom_point(aes(x = month, y = unemployment * 100, color = "Unemployment"), size = 2) +
+  scale_color_manual(values = c("Inflation" = "blue", "Unemployment" = "red"), 
+                     name = "Rates", labels = c("Inflation", "Unemployment")) +
+  labs(
+    title = "Number of Crime Occurrence over Time",
+    x = "Year", y = "Number of Crimes"
+  ) +
+  scale_y_continuous(
+    name = "Number of Crimes",
+    sec.axis = sec_axis(~ . / 100, name = "Rates (%)" )
+  )
+
+ggplotly(barlineplt)
 ```
 
 
-```{r include=FALSE}
+- The occurrence of crime in Toronto peaked at over 1500 occurrences per month in October 2019 between 2018 and 2022, but then decreased in the following two years to below 1300 occurrences per month. There appears to be a seasonal trend with lower crime rates in winter.
 
-Toronto <- mb_isochrone(
-  "City of Toronto",
-  access_token = MAPBOX_TOKEN
-) %>% 
-  leaflet() %>%
-  addMapboxTiles(style_id = "streets-v11",
-                 username = "mapbox",
-                 access_token = MAPBOX_TOKEN) %>%
-  addPolygons()
-  
+- Historically, inflation and unemployment have shown an inverse relationship, where inflation tends to decrease when unemployment rises. In other words, increased employment leads to higher spending power and demand. This pattern can be observed from the rate lines in the visualizations.
+
+- According to the barplot depicting the number of crime occurrences, there appears to be a correlation between decreasing inflation rates around 2020 and a decrease in the number of crimes. Additionally, starting from 2021, as the inflation rate continues to increase, the number of crimes also decreases.
+
+- Despite the sharp increase in the unemployment rate at the beginning of 2020 due to COVID-19, it appears to have had no discernible effect on the number of crimes committed. Moreover, in later 2021, despite a decrease in the unemployment rate, the number of crime occurrences continued to increase. This suggests that the unemployment rate may not be a significant factor in the occurrence of crimes.
 
 
-
-library(mapboxapi)
-mb_access_token(MAPBOX_TOKEN)
-library(leaflet)
-
-walk_5min <- mb_isochrone("2850 S University Dr, Fort Worth TX 76129",
-                          profile = "walking",
-                          time = 5,
-                          access_token = MAPBOX_TOKEN)
-
-leaflet(walk_5min) %>%
-  addMapboxTiles(style_id = "streets-v11",
-                 username = "mapbox",
-                 access_token = MAPBOX_TOKEN) %>%
-  addPolygons()
-
-
-# plot_mapbox(maps::canada.cities) %>%
-#   add_markers(
-#     x = ~longitude, 
-#     y = ~latitude, 
-#     size = ~counts, 
-#     color = ~country.etc,
-#     colors = "Accent",
-#     text = ~paste(neighbourhood, counts),
-#     hoverinfo = "text"
-#   )
-
-
-# library(opendatatoronto)
-# library(dplyr)
-# 
-# # get package
-# package <- show_package("neighbourhoods")
-# package
-# 
-# # get all resources for this package
-# resources <- list_package_resources("neighbourhoods")
-# 
-# # identify datastore resources; by default, Toronto Open Data sets datastore resource format to CSV for non-geospatial and GeoJSON for geospatial resources
-# datastore_resources <- filter(resources, tolower(format) %in% c('csv', 'geojson'))
-# 
-# # load the first datastore resource as a sample
-# data <- filter(datastore_resources, row_number()==1) %>% get_resource()
-# data
-
-```
-
-
-### Scatterplot
-```{r class.source = 'foldable'}
-# balshdfadfj
-```
-
-
-
-## {- .unlisted}
-<br>
-<hr>
-<br>
-<br>
-
-## Visualizations
-
-
-```{r plt1, echo=FALSE}
-plt1
-```
-
-
-- blah
-- blah
-- blah
-- blah
-
-```{r plt2, echo=FALSE}
-plt2
-```
-
-
-- blah
-- blah
-- blah
-- blah
-
-```{r plt3, echo=FALSE}
-
-```
-
-
-<br>
-
-<br>
-<br>
+<br><br><br>
