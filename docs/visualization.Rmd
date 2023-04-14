@@ -182,20 +182,34 @@ leaflet(walk_5min) %>%
 
 <br><hr><br><br>
 
-<!-- ## Crime Occurrence on Date -->
-<!-- ```{r class.source = 'foldable'} -->
-<!-- # balshdfadfj -->
+## Crime Occurrence on Date 
+
+```{r class.source = 'foldable'}
+# Aggregated monthly crime occurrence by crime_cat
+crime_by_mon_cat <- crime_data %>% 
+  mutate(month = ym(paste0(year, '-', month_num))) %>% 
+  group_by(month, crime_cat) %>% 
+  summarise(
+    counts = length(unique(event_unique_id))
+  )
+
+# Plot
+moncatplot <- crime_by_mon_cat %>% 
+  ggplot(aes(x = month, y = counts)) +
+  geom_line(aes(color = crime_cat)) +
+  theme_minimal() +
+  labs(title = "Crime Occurrence for each Crime Category", 
+       x = "Month", y = "Number of Crime", color = "Crime Category")
+
+ggplotly(moncatplot) 
+```
 
 
-<!-- ``` -->
 
-<!-- - blah -->
-<!-- - blah -->
-<!-- - blah -->
-<!-- - blah -->
+- Based on the plotted data for crime occurrences in different categories between 2014 and 2022, it is evident that auto theft has shown a clear increasing trend over time, while robbery has shown a decreasing trend. The number of shooting and firearm discharge incidents appears to remain relatively constant over time, although this category has fewer observations compared to the other three categories. Break and Enter, on the other hand, has the highest number of observations in the combined data, almost equal to the sum of the number of occurrences in the other three categories before the year 2018, but it shows a decreasing trend after that.
 
 
-<!-- <br><hr><br><br> -->
+<br><hr><br><br>
 
 ## Crime Occurrence with Rates
 
