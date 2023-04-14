@@ -125,12 +125,12 @@ robbery <- robbery %>%
 
 
 ### Combine crime data together
-data <- bind_rows(shooting, break_enter, auto_theft, robbery)
+crime_data <- bind_rows(shooting, break_enter, auto_theft, robbery)
 
 
 ### Basic EDA to clean data
 # Rename columns
-data <- data %>% 
+crime_data <- crime_data %>% 
   rename(
     date = occurrencedate,
     year = occurrenceyear,
@@ -140,17 +140,17 @@ data <- data %>%
   )
 
 # Convert month and day of week columns to numbers
-data$month_num <- 
-  as.integer(factor(data$month, levels = month.name))
+crime_data$month_num <- 
+  as.integer(factor(crime_data$month, levels = month.name))
 
-data$dayofweek_num <- 
-  as.integer(factor(data$dayofweek, 
+crime_data$dayofweek_num <- 
+  as.integer(factor(crime_data$dayofweek, 
                     levels = c("Monday","Tuesday","Wednesday","Thursday","Friday",
                                "Saturday","Sunday"), 
                     ordered=TRUE))
 
 # Set 0 latitude/longitude/year/day to NA
-data <- data %>%
+crime_data <- crime_data %>%
   mutate(
     latitude = ifelse(latitude == 0, NA, latitude),
     longitude = ifelse(longitude == 0, NA, longitude),
@@ -160,7 +160,7 @@ data <- data %>%
 
 # Convert date to Date type, then use it to fill NAs 
 #   for columns year/month/month_num/dayofweek/day 
-data <- data %>% 
+crime_data <- crime_data %>% 
   mutate(
     date = as.POSIXct(date)
   ) %>% 
@@ -175,7 +175,7 @@ data <- data %>%
   )
 
 # Handle outliers
-data <- data %>% 
+crime_data <- crime_data %>% 
   filter(
     year >= 2014,
     year <= 2021,
@@ -202,7 +202,7 @@ unemployment <-
 names(unemployment) <- c('month', 'rate')
 
 ### Merge rates in one dataframe
-merged_rate <- merge(
+rate_data <- merge(
   inflation, unemployment, 
   by.x = c('month'), 
   by.y = c('month'), 
@@ -211,7 +211,7 @@ merged_rate <- merge(
 ) %>% 
   rename(inflation = rate.x, unemployment = rate.y)
 
-merged_rate <- merged_rate %>% 
+rate_data <- rate_data %>% 
   mutate(
     month_date = month,
     year = year(month),

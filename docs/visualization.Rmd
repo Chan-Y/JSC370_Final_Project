@@ -5,6 +5,7 @@ output:
     html_document:
         toc: TRUE
         toc_float: TRUE
+        code_folding: show
 ---
 
 ```{r setup, message=FALSE, echo=FALSE, include=FALSE, eval=TRUE, warning=FALSE}
@@ -14,6 +15,8 @@ library(dplyr)
 library(plotly)
 library(DT)
 library(knitr)
+library(mapboxapi)
+library(leaflet)
 
 # Initialize code chunk options
 opts_chunk$set(
@@ -22,10 +25,10 @@ opts_chunk$set(
   eval=TRUE,
   echo = TRUE,
   cache = FALSE,
-  fig.width = 7, 
+  # fig.width = 8, 
   fig.align = 'center',
-  fig.asp = 0.618,
-  out.width = "700px",
+  # fig.asp = 0.618,
+  # out.width = "700px",
   class.source = "code-r")
 ```
 
@@ -40,6 +43,7 @@ opts_chunk$set(
 ```
 
 
+
 ```{r load-data, include=FALSE, eval=TRUE}
 source("resources/data/process_data.R")
 ```
@@ -49,96 +53,200 @@ This is my JSC370 Final Project website. I will showcase a few interactive visua
 
 <br>
 
-<br>
 
-<br>
 
-## Second step
+## R Code {.tabset}
 
-Then I will add some code to create the **plotly** figures
+### Lineplot for Rates
 
-Note: You need to name each code chunk, like this one: `plot1`
-
-```{r plots, include=FALSE, eval=TRUE}
-count_by_month_cat <- data %>% 
-  group_by(year, month_num, crime_cat) %>% 
-  summarise(
-    count = length(unique(event_unique_id))
+```{r class.source = 'foldable'}
+# Compare inflation and unemployment rate
+plt1 <- rate_data %>% 
+  plot_ly(
+    x = ~ month_date,
+    hoverinfo = "text",
+    text = ~ paste(
+      month.abb[month], year, "\n\t",
+      "Inflation %: ", inflation, "\n\t",
+      "Unemployment %: ", unemployment
+    )
+  ) %>% 
+  add_lines(y = ~ inflation, name = "Inflation") %>% 
+  add_lines(y = ~ unemployment, name = "Unemployment") %>% 
+  layout(
+    hovermode = "compare",
+    xaxis = list(title = "Date"),
+    yaxis = list(title = "Rate", side = "left"),
+    title = list(
+      text = "Inflation Rate vs Unemployment Rate",
+      font = list(size = 20),
+      y = 0.95, x = 0.5, xanchor = 'center', yanchor = 'top'
+    ),
+    legend = list(
+      title=list(text='Rate'),
+      y = 0.68
+    )
   )
-
-plt1 <- count_by_month_cat %>% 
-  mutate(
-    month = ym(paste0(year, '-', month_num))
-  ) %>% 
-  group_by(month) %>% 
-  summarise(
-    count = sum(count)
-  ) %>% 
-  inner_join(merged_rate, by=c("month" = "month_date")) %>% 
-  ggplot(aes(x = month, y = count)) +
-  geom_bar(stat = "identity", fill = "lightblue")+
-  theme_classic()+
-  geom_line(aes(x = month, y = inflation * 100, group = 1, color = "Inflation")) +
-  geom_point(aes(x = month, y = inflation * 100, color = "Inflation"), size = 2) +
-  geom_line(aes(x = month, y = unemployment * 100, group = 1, color = "Unemployment")) +
-  geom_point(aes(x = month, y = unemployment * 100, color = "Unemployment"), size = 2) +
-  scale_color_manual(values = c("Inflation" = "blue", "Unemployment" = "red"), 
-                     name = "Rates", labels = c("Inflation", "Unemployment")) +
-  labs(
-    title = "Number of Crime Occurrence over Time",
-    x = "Year", y = "Number of Crimes"
-  ) +
-  scale_y_continuous(
-    name = "Number of Crimes",
-    sec.axis = sec_axis(~ . / 100, name = "Rates (%)" )
-  )
-
-
-# Top 10 for each crime category
-plt2 <- data %>%
-  group_by(neighbourhood, crime_cat) %>% 
-  summarise(
-    count = length(unique(event_unique_id))
-  ) %>% 
-  group_by(crime_cat) %>%
-  slice_max(count, n = 5)  %>% 
-  ggplot(aes(neighbourhood, y=count)) +
-  geom_bar(stat="identity", fill = "lightblue") +
-  facet_wrap(~crime_cat, scales = "free_y") +
-  theme_minimal() +
-  coord_flip() +
-  labs(title = "Barplot of Crime Occurrence by Neighbourhood", 
-       subtitle = "Focus on top 5 neighbours in each crime category",
-       x  = "Neighbourhood", y = "Number of Crime Occurrence")
 ```
 
+
+
+### Mapview
+```{r mapview, class.source='foldable', out.width="100%"}
+# Group crime data by neighborhood
+crime_by_neighb <- crime_data %>% 
+  group_by(hood_id) %>% 
+  summarise(
+    longitude = mean(longitude),
+    latitude = mean(latitude),
+    neighbourhood = unique(neighbourhood),
+    counts = length(unique(event_unique_id))
+  )
+
+# Read in Mapbox access token
+MAPBOX_TOKEN <- paste(readLines("resources/files/.mb_token"), collapse="") 
+
+# Plot mapview of nei
+plt2 <- plot_mapbox(
+    mode = 'scattermapbox'
+  ) %>%
+  add_markers(
+    data = crime_by_neighb,
+    y = ~ latitude,
+    x = ~ longitude,
+    size = ~ counts,
+    sizemode = "area",
+    color = ~ neighbourhood,
+    hoverinfo = "text",
+    text = ~ paste(
+      neighbourhood, ": ", counts, " times"
+    )
+  ) %>% 
+  layout(
+    title = list(
+      text = "Mapview of Crime Frequency in Neighborhoods",
+      font = list(size = 16, color = "white"),
+      y = 0.95, x = 0.5,
+      xanchor = 'center', yanchor = 'top'
+    ),
+    mapbox = list(
+      style = 'dark',
+      zoom = 9,
+      center = list(lat = median(crime_by_neighb$latitude),
+                    lon = median(crime_by_neighb$longitude))
+    ),
+    # legend = list(orientation = 'h'),
+    showlegend = FALSE
+  ) %>% 
+  config(mapboxAccessToken = MAPBOX_TOKEN)
+```
+
+
+```{r include=FALSE}
+
+Toronto <- mb_isochrone(
+  "City of Toronto",
+  access_token = MAPBOX_TOKEN
+) %>% 
+  leaflet() %>%
+  addMapboxTiles(style_id = "streets-v11",
+                 username = "mapbox",
+                 access_token = MAPBOX_TOKEN) %>%
+  addPolygons()
+  
+
+
+
+library(mapboxapi)
+mb_access_token(MAPBOX_TOKEN)
+library(leaflet)
+
+walk_5min <- mb_isochrone("2850 S University Dr, Fort Worth TX 76129",
+                          profile = "walking",
+                          time = 5,
+                          access_token = MAPBOX_TOKEN)
+
+leaflet(walk_5min) %>%
+  addMapboxTiles(style_id = "streets-v11",
+                 username = "mapbox",
+                 access_token = MAPBOX_TOKEN) %>%
+  addPolygons()
+
+
+# plot_mapbox(maps::canada.cities) %>%
+#   add_markers(
+#     x = ~longitude, 
+#     y = ~latitude, 
+#     size = ~counts, 
+#     color = ~country.etc,
+#     colors = "Accent",
+#     text = ~paste(neighbourhood, counts),
+#     hoverinfo = "text"
+#   )
+
+
+# library(opendatatoronto)
+# library(dplyr)
+# 
+# # get package
+# package <- show_package("neighbourhoods")
+# package
+# 
+# # get all resources for this package
+# resources <- list_package_resources("neighbourhoods")
+# 
+# # identify datastore resources; by default, Toronto Open Data sets datastore resource format to CSV for non-geospatial and GeoJSON for geospatial resources
+# datastore_resources <- filter(resources, tolower(format) %in% c('csv', 'geojson'))
+# 
+# # load the first datastore resource as a sample
+# data <- filter(datastore_resources, row_number()==1) %>% get_resource()
+# data
+
+```
+
+
+### Scatterplot
+```{r class.source = 'foldable'}
+# balshdfadfj
+```
+
+
+
+## {- .unlisted}
+<br>
+<hr>
+<br>
 <br>
 
-## Third step {.tabset}
+## Visualizations
 
-Create tabs to display each figure
-
-### Scatterplot: with DC
 
 ```{r plt1, echo=FALSE}
 plt1
 ```
 
-### Scatterplot: without DC
+
+- blah
+- blah
+- blah
+- blah
 
 ```{r plt2, echo=FALSE}
 plt2
 ```
 
-### W/O DC Log transformed
-```{r}
+
+- blah
+- blah
+- blah
+- blah
+
+```{r plt3, echo=FALSE}
 
 ```
 
 
 <br>
-
-Done!
 
 <br>
 <br>
