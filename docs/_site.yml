@@ -27,6 +27,10 @@ navbar:
           href: https://www.toronto.ca/city-government/data-research-maps/toronto-economy-labour-force-demographics/toronto-economic-dashboard/#detail/1.22
         - text: "Unemployment Rates"
           href: https://www.toronto.ca/city-government/data-research-maps/toronto-economy-labour-force-demographics/toronto-economic-dashboard/#detail/1.02
+        - text: '---------'
+        - text: "Toronto Open Data"
+        - text: "Toronto Neighbourhoods"
+          href: https://open.toronto.ca/dataset/neighbourhoods/
     - text: "Report"
       icon: fa-file-pdf-o fa-lg
       href: resources/files/Report.pdf
