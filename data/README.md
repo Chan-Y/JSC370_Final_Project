@@ -18,10 +18,16 @@ The City of Toronto publishes and keeps updating the monthly [inflation rate](ht
 
 ## 3. Toronto Neighbourhoods Demographics and Criminal Rates
 
-The City of Toronto also maintains Open Data Portal that provides datasets relative to Toronto neighbourhoods
+The City of Toronto also maintains Open Data Portal that provides datasets relative to Toronto neighbourhoods. Obtain data by import the `opendatatoronto` library then get resource by passing package name to `list_package_resources()`.
 
 - [Toronto neighbourhoods geometry](https://open.toronto.ca/dataset/neighbourhoods/)
 
 - [Toronto Demographics](https://open.toronto.ca/dataset/wellbeing-toronto-demographics/)
 
-- [Neighbourhood Crime Rates](https://open.toronto.ca/dataset/neighbourhood-crime-rates/)
+
+
+## 4. Mapbox Access Token
+
+The map view used in this project requires a public access token from an individual's Mapbox account. The token is confidential hence not published in the project folder.
+
+The token could be generated from [here](https://account.mapbox.com/access-tokens/). Save the token in text file named `.mb_token` and place in project folder under `/docs/resources/files/`.

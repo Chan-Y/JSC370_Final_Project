@@ -225,18 +225,43 @@ rate_data <- rate_data %>%
 # neighbor_data <- st_read("resources/data/Neighbourhoods.geojson")
 
 library(opendatatoronto)
-library(dplyr)
 
-# get all resources for this package
+# Neighbourhoods package
+# https://open.toronto.ca/dataset/neighbourhoods/
 resources <- list_package_resources("neighbourhoods")
-
 # identify datastore resources; 
 # by default, Toronto Open Data sets datastore resource format to CSV 
 #   for non-geospatial and GeoJSON for geospatial resources
 datastore_resources <- filter(resources, tolower(format) %in% c('csv', 'geojson'))
-
 # load the first datastore resource as a sample
-neighbor_data <- filter(datastore_resources, row_number()==1) %>% get_resource()
-
+neighbour_data <- filter(datastore_resources, row_number()==2) %>% get_resource()
 # Add hood_id column to merge with crime_data
-neighbor_data$hood_id <- as.integer(neighbor_data$AREA_SHORT_CODE)
+neighbour_data$hood_id <- as.integer(neighbour_data$AREA_SHORT_CODE)
+
+
+# # Neighbourhood Profiles 2016 package
+# # https://open.toronto.ca/dataset/neighbourhood-profiles/
+# resources <- list_package_resources("6e19a90f-971c-46b3-852c-0c48c436d1fc")
+# # identify datastore resources; by default, Toronto Open Data sets datastore resource format to CSV for non-geospatial and GeoJSON for geospatial resources
+# datastore_resources <- filter(resources, tolower(format) %in% c('csv', 'geojson'))
+# # load the first datastore resource as a sample
+# neighbour_profile_data <- filter(datastore_resources, row_number()==1) %>% get_resource()
+
+
+# Toronto - Demographics package, only need 2016 population
+# https://open.toronto.ca/dataset/wellbeing-toronto-demographics/
+resources <- list_package_resources("15a37448-b27e-44d2-9c2e-52e148c8894f")
+population_data <- filter(resources, row_number()==1) %>% get_resource()
+population_data <- population_data$`016 Pop_TotalChange`
+
+
+population_data <- population_data %>% 
+  select(
+    HoodID, Neighbourhood, Pop2016
+  ) %>% 
+  rename(
+    hood_id = HoodID, 
+    neighbourhood = Neighbourhood, 
+    pop_2016 = Pop2016
+  ) %>% 
+  filter(!is.na(hood_id)) 

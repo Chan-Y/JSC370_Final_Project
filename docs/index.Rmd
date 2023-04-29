@@ -1,15 +1,14 @@
 ---
 title: "Criminal Statistics in Toronto"
-date: "`r format(Sys.time(), '%B %d, %Y')`" # 2023-04-10
+date: "2023-04-10" # `r format(Sys.time(), '%B %d, %Y')`
 output: 
     html_document
 ---
 
 
 <br>
-<br>
 
-# Introduction
+## Introduction
 
 Crime is a common social problem that affects communities worldwide. In Canada, Toronto has been the city with the highest crime rate, which includes violent and property crimes. The Toronto Police Service is the agency responsible for enforcing the law in the city, and it publishes criminal data on the [Public Safety Data Portal](https://data.torontopolice.on.ca/). This data includes information on the type of crime, location, and date of occurrence.
 
@@ -25,8 +24,13 @@ The purpose of this project is to analyze the crime statistics in the city of To
 
 Overall, we will provide an overview of the crime situation in the city of Toronto, including the types of crimes and their frequency. We will also discuss the inflation and unemployment rates in the city and how they have changed over time. Finally, we will present the results of our analysis and discuss the implications of the findings.
 
+<br><hr><br>
 
+### Access the Project
 
+To view the complete pdf report, click [here]().
+
+To watch a demonstration of this website, click [here](https://play.library.utoronto.ca/watch/7cbb48835688213f364d2ccdc415959f).
 
 <br>
 <br>

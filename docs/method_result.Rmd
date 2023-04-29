@@ -1,0 +1,799 @@
+---
+output: 
+    html_document:
+        toc: TRUE
+        toc_float: TRUE
+---
+
+```{r setup, message=FALSE, echo=FALSE, include=FALSE, eval=TRUE, warning=FALSE}
+library(data.table)
+library(tidyverse)
+library(dplyr)
+library(dtplyr) 
+library(plotly)
+library(DT)
+library(knitr)
+library(mapboxapi)
+library(leaflet)
+library(sf)
+library(ggplot2)
+library(lubridate)
+library(kableExtra)
+library(broom)
+
+source("resources/data/process_data.R")
+```
+
+<br>
+
+# Method
+
+The initial stage of this statistical project is to collect data that is to be examined and analyzed, then explore and clean the data to fit the requirements.
+
+<br>
+
+## Data Collection & Cleaning
+
+### 1. Crime Data
+Most of the data utilized in this project can be accessed through the Public Safety Data Portal. The Police Service identifies Assault, Break and Enter, Auto Theft, Robbery, and Theft Over as the categories of Major Crime Indicators, while this project focuses on analyzing four specific crime categories that occurred in Toronto, as listed below. The data is available in CSV format on the Data Portal and can be imported into R for analysis.
+
+- [Shootings and Firearm Discharges](https://data.torontopolice.on.ca/datasets/TorontoPS::shooting-and-firearm-discharges-open-data/about): shooting occurrence refers to any incident in which a projectile is discharged from a firearm and injures a person, excluding events like suicide and police involved firearm discharges. 
+
+- [Break and Enter](https://data.torontopolice.on.ca/datasets/TorontoPS::break-and-enter-open-data/about): the type of premises were reported break and enter includes commercial, house, apartment, educational, transit, and others. One occurrence may have several rows of records since the data is provided at both offense and/or victim levels. 
+
+- [Auto Theft](https://data.torontopolice.on.ca/datasets/TorontoPS::auto-theft-open-data/about): similarly, one occurrence may have several rows of record.
+
+- [Robbery](https://data.torontopolice.on.ca/datasets/TorontoPS::robbery-open-data/about): includes robbery for mugging, purse snatching, vehicle jacking, robbing ATMs, armoured cars, taxis, etc. 
+
+<br>
+
+The datasets contain columns of information such as a unique event ID, the date of occurrence, the neighbourhood, as well as the longitude and latitude coordinates of each event. For the purpose of this project, the occurrence date will be used instead of the report date for each record. Additional information, such as the type of premises and locations, may be included in some datasets. 
+
+In order to facilitate the merging of the datasets into one for analysis, relevant variables are selected and standardized to ensure that variable names and types (numberical/categorical) match across all categories.
+
+Meanwhile, a new variable named `crime_cat` is created to store the name of their category for each record, then use `bind_rows` to merge all categories into one dataset. A `NA` value will be filled into columns that some categories do not have but others do. 
+
+Following the initial EDA checks, the following updates were made to serve the project's objectives:
+
+- Columns were renamed to enable easy access.
+
+- New columns were created to represent `month` and `day_of_week` in numeric format.
+
+- Suspicious values in `year`, `day`, `latitude`, and `longitude` columns were replaced with `NA`.
+
+- Although all datasets from the Public Safety Data Portal include a date column, some may lack `year`/`month`/`day`/`day_of_week` information. To address this, the `date` column was reformatted using `as.POSIXct()`. This enabled the `date` column to fill in the missing values in `year`/`month`/`day`/`day_of_week` correspondingly.
+
+- Finally, the project retained only those observations with `latitude` and `longitude` values within or around city of Toronto, and limited the analysis to years between 2014 and 2021, as there were no records of `Break and Enter` incidents in 2022.
+
+<br>
+
+The complete dataset, comprising the downloaded CSV files for shooting and firearm discharges, break and enter, auto theft, and robbery, consists of 122,157 observations and 17 feature variables. Below lists the variables in the dataset.
+
+| **Variable** | **Description** |
+|---|---|
+| event_unique_id | Identifier of the offence occurrence |
+| date | Occurrence date of the crime, in the format of "YYYY/MM/DD HH:mm:ss" |
+| year | Occurrence year |
+| month | Occurrence month, e.g. April, May |
+| month_num | Occurrence month in numeric type, e.g. 4, 5 |
+| day | Occurrence day of the month, e.g. 26, 27 |
+| dayofweek | Day of week of occurrence, e.g. Friday, Saturday |
+| dayofweek_num | Day of week in numeric type starting on Monday, e.g. 5, 6 |
+| division | Police division where offence occurred |
+| hood_id | Identifier of neighbourhood where offence occurred |
+| neighbourhood | Name of neighbourhood where offence occurred |
+| longitude | Longitude coordinates |
+| latitude | Latitude coordinates |
+| crime_cat | Category of the criminal offence, e.g. Auto Theft, Robbery |
+| location_type | Location type of offence, e.g. Go Station, Bar/Restaurant |
+| premises_type | Premises type of offence, e.g. Apartment, House |
+| offence | Title of offence, e.g. Robbery-Atm, Theft Of Motor Vehicle |
+
+<br> 
+
+Displayed below is Table 1, which illustrates a random sample of 6 rows from the cleaned data. 
+<div class = "vscroll-table">
+```{r echo=FALSE}
+crime_data[sample(nrow(crime_data), 6), ] %>%
+  select(
+    event_unique_id, 
+    date, year, month, month_num, day, dayofweek, dayofweek_num, 
+    division, hood_id, neighbourhood, crime_cat, longitude, latitude,
+    premises_type, location_type, offence
+  ) %>% 
+  kable(caption = "Table 1: Sample Data from Public Safety Data Portal",
+        style = "latex") %>% 
+  kable_styling(fixed_thead = T)
+```
+
+</div>
+
+<br>
+
+### 2. Financial Indicators
+
+Additionally, for the two datasets from the City of Toronto, which record the monthly [inflation rate](https://www.toronto.ca/city-government/data-research-maps/toronto-economy-labour-force-demographics/toronto-economic-dashboard/#detail/1.22) and [unemployment rates](https://www.toronto.ca/city-government/data-research-maps/toronto-economy-labour-force-demographics/toronto-economic-dashboard/#detail/1.02) between January 2018 and February 2023, are also provided in CSV format.
+
+The monthly inflation and unemployment rates were downloaded and imported into R as separate datasets, each containing two columns named `month` and `rate.` However, since the `month` columns in both datasets have the same format and range, they can be merged into a single dataset using the `merge()` function.
+
+Moreover, the original `month` column is in the format `YYYY-mm-dd`, with the day section set to 01. To facilitate future manipulation, the `month` column is renamed to `month_date`, and new columns named `year` and `month` are generated based on the `month_date` column.
+
+Displayed below as Table 2 is the data for the monthly inflation and unemployment rates in the year 2021 as example.
+
+
+```{r echo=FALSE}
+rate_data%>% 
+  filter(year == 2021) %>% 
+  select(month_date, year, month, inflation, unemployment) %>% 
+  kable(caption = "Table 2: Data from the City of Toronto for Year 2021",
+        style = "latex") %>% 
+  kable_styling(fixed_thead = T)
+```
+
+<br>
+
+### 3. Neighbourhood & Demographics
+
+The Open Data Portal of the City of Toronto contains information on neighbourhoods and demographics. For this project, we will utilize the [`neighbourhoods`](https://open.toronto.ca/dataset/neighbourhoods/) package from the `opendatatoronto` library, which provides geometry data containing the coordinates of the boundaries of 158 neighbourhoods in Toronto that will be used to create map visualizations.
+
+
+Table 3 displays an example dataset of neighbourhood information with selected variables. It can be observed that the identifier for each neighbourhood is represented by the variable `AREA_SHORT_CODE`, which is equivalent to the `hood_id` variable in the crime dataset. To facilitate future usage, a new column has been generated by converting the data type of `AREA_SHORT_CODE` to match it with other datasets.
+
+
+```{r echo=FALSE}
+neighbour_data %>% 
+  select(
+    AREA_SHORT_CODE, AREA_NAME, geometry, hood_id
+  ) %>% 
+  arrange(AREA_SHORT_CODE) %>% 
+  head() %>% 
+  kable(caption = "Table 3: Example of Neighbourhood Information",
+        style = "latex") %>% 
+  kable_styling(fixed_thead = T)
+```
+
+Additionally, the portal contains open data on the [demographics of Toronto](https://open.toronto.ca/dataset/wellbeing-toronto-demographics/). The project will extract the population data for each neighbourhood in 2016 to compute crime occurrence density over population.
+
+The Table 4 below displays the example data of population in 2016 for the first six neighbourhoods. Only useful variables were extracted from the dataset and were renamed properly.
+
+```{r echo=FALSE}
+population_data %>% 
+  head() %>% 
+  kable(caption = "Table 4: Example of Neighbourhood Population in 2016",
+        style = "latex") %>% 
+  kable_styling(fixed_thead = T)
+```
+
+<br><br>
+
+## Data Grouping
+
+To examine how different types of crimes vary across various neighbourhoods in Toronto, the data needs to be grouped by the `neighborhood` and `crime_cat` columns. As noted earlier, a single occurrence may have multiple rows of records. Therefore, instead of counting the number of observations, we count the number of unique values in `event_unique_id` column for each group.
+
+
+Displayed below in Table 5 are the top three neighbourhoods with the highest number of crime occurrences for each crime category, with their average latitude and longitude in each neighbourhood.
+
+```{r echo=FALSE, message=FALSE}
+crime_data %>%
+  group_by(neighbourhood, crime_cat) %>% 
+  summarise(
+    count = length(unique(event_unique_id)),
+    latitude = mean(latitude),
+    longitude = mean(longitude)
+  ) %>% 
+  group_by(crime_cat) %>%
+  slice_max(count, n = 3) %>% 
+  arrange(crime_cat, desc(count))%>% 
+  kable(caption = "Table 5: Example Data Grouped by Neighbourhood and Crime",
+        style = "latex") %>% 
+  kable_styling(fixed_thead = T)
+```
+
+
+<br>
+
+To analyze how the number of crime occurrences in Toronto changes over time, the data needs to be grouped by `year` and `month_num`, as well as by `crime_cat` for deeper insights.
+
+Displayed below as Table 6 is an example of the data, which shows the number of crime occurrences for each category in the first quarter of 2021.
+
+```{r echo=FALSE, message=FALSE}
+count_by_month_cat <- crime_data %>% 
+  group_by(year, month_num, crime_cat) %>% 
+  summarise(
+    count = length(unique(event_unique_id))
+  )
+
+count_by_month_cat %>% 
+  filter(
+    year == 2021, 
+    month_num <= 3
+  )  %>% 
+  arrange(month_num, desc(count))%>% 
+  kable(caption = "Table 6: Example Data Grouped by Month and Crime",
+        style = "latex") %>% 
+  kable_styling(fixed_thead = T)
+```
+
+
+<br>
+
+Furthermore, Table 7 provides a breakdown of the total number of criminal offences committed for the four categories. It is worth noting that the highest number of occurrences between 2014 and 2021 in Toronto belongs to break and enter, with over 55,000 incidents, while auto theft and robbery have fewer incidents in comparison. On the other hand, firearm discharge has the lowest number of incidents, with around 3,000 occurrences.
+
+```{r echo=FALSE, message=FALSE}
+crime_data %>% 
+  group_by(crime_cat) %>% 
+  summarise(
+    count = length(unique(event_unique_id))
+  ) %>% 
+  arrange(desc(count)) %>%  
+  kable(caption = "Table 7: Number of Crime Occurrences for each Category",
+        style = "latex") %>% 
+  kable_styling(fixed_thead = T)
+```
+
+<br><br>
+
+## Data Merging
+
+To analyze the correlation between the inflation rate and unemployment rate, we can merge the data that is grouped by month and crime category with the rates data.
+
+Table 8 displayed below is an example of the data, illustrating the number of crime occurrences for each category in January 2021.
+```{r echo=FALSE}
+count_by_month_cat_rates <- count_by_month_cat %>% 
+  mutate(
+    month = ym(paste0(year, '-', month_num))
+  ) %>% 
+  inner_join(rate_data, by=c("month" = "month_date")) %>% 
+  select(-c("month.y", "year.y")) 
+
+
+count_by_month_cat_rates %>% 
+  rename(year = year.x) %>%   
+  filter(
+    year == 2021, 
+    month_num == 1
+  )  %>% 
+  arrange(month_num, desc(count))%>% 
+  kable(caption = "Table 8: Example Data Grouped by Month and Crime",
+        style = "latex") %>% 
+  kable_styling(fixed_thead = T)
+```
+
+We merge the population number for each neighbourhood to neighbourhood info data to facilitate future usage. Table 9 below displays the example results. 
+
+
+```{r echo=FALSE}
+nb_pop_data <- merge(
+  x = neighbour_data, y = population_data, by = 'hood_id'
+) 
+
+nb_pop_data %>% 
+  select(
+    AREA_SHORT_CODE, AREA_NAME, geometry, hood_id, pop_2016
+  ) %>% 
+  arrange(AREA_SHORT_CODE) %>% 
+  head() %>% 
+  kable(caption = "Table 9: Example of Merged Neighbourhood Information",
+        style = "latex") %>% 
+  kable_styling(fixed_thead = T)
+```
+
+
+<br><br>
+
+## Modeling 
+
+As previously mentioned, the project goal is to investigate whether there is a relationship between changes in the inflation and unemployment rates and the number of crimes in Toronto. To achieve this, I plan to train three different linear models using the variables from Table 8, which include inflation rate, unemployment rate, crime category, and occurrence date, to predict the number of crime occurrences.
+
+Since the dataset only contains approximately 190 observations, I will split it into training and testing sets using an 80/20 split.
+
+The first model I will train is a generalized linear model (GLM). This model extends the linear model to handle non-normal response variables, such as counts of occurrences. I will use the Poisson distribution assuming that the mean and variance of the count are equal, and that the counts are independent of each other.
+
+Next, I will use a generalized additive model (GAM) as an extension of the GLM. GAM allows for non-linear relationships between response and predictors, and I plan to apply smoothing functions to the date variable since I suspect a non-linear relationship between date and counts.
+
+Lastly, I will train a linear mixed-effects model, which was covered in STA303. Since the data can be clustered by crime category, a linear mixed-effects model allows for random effects on categorical variables, which can account for the variability within and between groups.
+
+Although the dataset is small, I plan to use all available predictors to create pruned regression trees and a random forest model for predicting crime count. Ultimately, I aim to compare the mean squared errors of all these methods.
+
+<br><hr><br>
+
+# Result 
+
+<br>
+
+## 1. Occurrences correlation with financial indicators
+
+<br>
+
+### Through Visualizations
+
+To examine how the frequency of crime has evolved over time, we have plotted the occurrences of different crime categories between 2014 and 2022. 
+
+- The data indicates that auto theft has consistently increased over time, while robbery has experienced a decreasing trend. 
+
+- The category of shooting and firearm discharge shows a relatively steady frequency over time, albeit with fewer observations compared to the other categories. 
+
+- Break and Enter has the largest number of observations in the overall dataset, almost equivalent to the sum of occurrences of the other three categories before 2018, but it has experienced a downward trend since then.
+
+```{r echo=FALSE, message=FALSE}
+# Aggregated monthly crime occurrence by crime_cat
+crime_by_mon_cat <- crime_data %>% 
+  mutate(month = ym(paste0(year, '-', month_num))) %>% 
+  group_by(month, crime_cat) %>% 
+  summarise(
+    counts = length(unique(event_unique_id))
+  )
+
+# Plot
+moncatplot <- crime_by_mon_cat %>% 
+  ggplot(aes(x = month, y = counts)) +
+  geom_line(aes(color = crime_cat)) +
+  theme_minimal() +
+  labs(title = "Figure 1: Crime Occurrence for each Crime Category", 
+       x = "Month", y = "Number of Crime", color = "Crime Category")
+
+ggplotly(moncatplot)
+```
+
+<br>
+
+Figure 2 below displays the relationship between crime occurrences and financial indicators. Here are some observations:
+
+- The occurrence of crime in Toronto peaked at over 1500 occurrences per month in October 2019 between 2018 and 2022, but then decreased in the following two years to below 1300 occurrences per month. There appears to be a seasonal trend with lower crime rates in winter.
+
+- Historically, inflation and unemployment have shown an inverse relationship, where inflation tends to decrease when unemployment rises. In other words, increased employment leads to higher spending power and demand. This pattern can be observed from the rate lines in the visualizations.
+
+- According to the barplot depicting the number of crime occurrences, there appears to be a correlation between decreasing inflation rates around 2020 and a decrease in the number of crimes. Additionally, starting from 2021, as the inflation rate continues to increase, the number of crimes also decreases.
+
+- Despite the sharp increase in the unemployment rate at the beginning of 2020 due to COVID-19, it appears to have had no discernible effect on the number of crimes committed. Moreover, in later 2021, despite a decrease in the unemployment rate, the number of crime occurrences continued to increase. This suggests that the unemployment rate may not be a significant factor in the occurrence of crimes.
+
+```{r echo=FALSE, message=FALSE}
+# Combine rates_data with aggregated monthly crime occurrence
+crime_by_mon <- crime_data %>% 
+  mutate(month = ym(paste0(year, '-', month_num))) %>% 
+  group_by(month) %>% 
+  summarise(
+    counts = length(unique(event_unique_id))
+  ) %>% 
+  inner_join(rate_data, by=c("month" = "month_date"))
+
+# Plot the bar+lines 
+crime_by_mon %>% 
+  plot_ly(
+    x = ~ month
+  ) %>% 
+  add_bars(
+    y = ~ counts, name = "Number of Crimes", 
+    marker = list(color = 'lightblue'),
+    hoverinfo = "text",
+    text = ~paste(
+      month.abb[month.y], year, "\n", "Num of Crimes %:", counts
+    )
+  ) %>%
+  add_lines(
+    y = ~ inflation, name = "Inflation Rate", yaxis = "y2",
+    hoverinfo = "text",
+    text = ~paste(
+      month.abb[month.y], year, "\n", "Inflation %:", inflation
+    )
+  ) %>% 
+  add_lines(
+    y = ~ unemployment, name = "Unemployment Rate", yaxis = "y2",
+    hoverinfo = "text",
+    text = ~paste(
+      month.abb[month.y], year, "\n", "Unemployment %:", unemployment
+    )
+  ) %>% 
+  layout(
+    hovermode = "x",
+    xaxis = list(title = "Date"),
+    yaxis = list(title = "Number of Crimes", side = "left"),
+    yaxis2 = list(
+      overlaying = "y",
+      side = "right",
+      title = "Rates (%)"
+    ),
+    title = list(
+      text = "Figure 2: Crime Occurrence vs Inflation/Unemployment Rates",
+      font = list(size = 18),
+      y = 0.95, x = 0.5, xanchor = 'center', yanchor = 'top'
+    ),
+    legend = list(x = 1.1, y = .8)
+  ) 
+```
+
+The animated graph below confirms the previous observation of a trend between the inflation rate and the number of crime occurrences, suggesting a positive correlation between the two.
+
+```{r echo=FALSE, eval=TRUE, message=FALSE}
+library(gganimate)
+animate_data <- count_by_month_cat %>% 
+  mutate(
+    month = ym(paste0(year, '-', month_num))
+  ) %>% 
+  inner_join(rate_data, by=c("month" = "month_date")) %>% 
+  select(-c("month.y", "year.y")) %>% 
+  rename(year = year.x) %>% 
+  ggplot(aes(x = as.factor(month_num), y = count))+
+  geom_bar(stat = "identity", aes(fill=crime_cat))+
+  scale_fill_viridis_d(direction = -1) +
+  theme_classic()+
+  geom_line(aes(x = as.factor(month_num), y = inflation * 100, group = 1, color = "Inflation")) +
+  geom_point(aes(x = as.factor(month_num), y = inflation * 100, color = "Inflation"), size = 2) +
+  geom_line(aes(x = as.factor(month_num), y = unemployment * 100, group = 1, color = "Unemployment")) +
+  geom_point(aes(x = as.factor(month_num), y = unemployment * 100, color = "Unemployment"), size = 2) +
+  scale_color_manual(values = c("Inflation" = "cyan", "Unemployment" = "red"), 
+                     name = "Rates", labels = c("Inflation", "Unemployment")) +
+  labs(
+    title = "Figure 3: Number of Crime Occurrence by Category",
+    subtitle = 'Year: {frame_time}',
+    x = "Month", y = "Number of Crimes", 
+    fill = "Crime Category"
+  ) +
+  scale_y_continuous(
+    name = "Number of Crimes",
+    sec.axis = sec_axis(~ . / 100, name = "Rates (%)" )
+  ) +
+  transition_time(as.integer(year))+
+  ease_aes('cubic-in-out')
+
+animate(animate_data)
+```
+
+<br>
+
+<br> 
+
+### Model Prediction
+
+
+```{r echo=FALSE, message=FALSE}
+set.seed(370)
+train <- sample(1:nrow(count_by_month_cat_rates), floor(nrow(count_by_month_cat_rates) * 0.8))
+train_set <- count_by_month_cat_rates[train,]
+test <- setdiff(1:nrow(count_by_month_cat_rates), train)
+test_set <- count_by_month_cat_rates[test,]
+
+
+### GLM Model
+glm_mod <- glm(
+  data = train_set,
+  formula = count ~ crime_cat + month + inflation + unemployment,
+  family = "poisson"
+)
+
+# summary(glm_mod)
+
+# glm_mod %>% 
+#   tidy() %>% 
+#   kable(
+#     caption = "Coefficient Estimates of Poisson GLM Model",
+#     digits = 6,
+#     style = "latex") %>% 
+#   kable_styling(fixed_thead = T)
+
+glm_pred <- predict(glm_mod, test_set, type = "response")
+glm_MSE <- mean((test_set$count - glm_pred)^2)
+
+# library(car)
+# vif(glm_mod)
+```
+
+
+According to the Poisson GLM model output, the response variable is negatively associated with both inflation rate (approximately -0.029) and unemployment rate (around -0.039), and the latter has a greater effect on changes in crime occurrence than expected. Additionally, the crime category is a significant predictor with a clear impact. The testing set's MSE for this model is approximately 4287.
+
+
+```{r echo=FALSE, message=FALSE}
+### GAM Model
+library(mgcv)
+gmod <- gam(
+  data = train_set,
+  formula = count ~ s(as.numeric(month), bs = "cr", k = 10) + crime_cat + inflation + unemployment
+)
+
+# summary(gmod) 
+gmod_pred <- predict.gam(gmod, test_set)
+gmod_MSE <- mean((test_set$count - gmod_pred)^2)
+```
+
+The output of the GAM model shows a different pattern. Specifically, the estimated coefficients reveal that, when controlling for other variables, the count of crimes is significantly greater for the categories 'Break & Enter', 'Robbery', and 'Shooting & Firearm Discharge', relative to 'Auto Theft'. The coefficients for 'inflation' and 'unemployment' are negative, but not statistically significant, which suggests that there is no linear relationship between the financial indicators and the occurrence of crimes. The adjusted R-squared value of 0.914 indicates that the model accounts for 91.4% of the variability in the data, which highly possible caused by overfitting. The MSE of the testing set for this model is approximately 5829, which is higher than that of the first model.
+
+
+```{r echo=FALSE, message=FALSE}
+### Linear Mixed-Effects Models
+library(lme4)
+lme_mod <- lmer(
+  count ~ month + inflation + (unemployment | crime_cat),
+  data = train_set
+)
+
+# summary(lme_mod)
+lme_pred <- predict(lme_mod, newdata = test_set)
+lme_MSE <- mean((test_set$count - lme_pred)^2)
+```
+
+In the linear mixed-effects model, I assigned a random slope to the unemployment rate, as it appeared to be relatively more significant compared to the other two models. According to the model summary, the month and inflation rate did not have a significant impact on the number of crimes. The variance of the random effects indicated that there was considerable variation in the number of crimes between different crime categories. This model had the lowest MSE of approximately 3700 on the testing set.
+
+
+The variable importance plot, which was created using the pruned regression tree with an optimal complexity parameter value, reveals that the crime category is a significant predictor of offense counts, while both the inflation rate and unemployment rate are not. The testing set MSE for this model was approximately 4300.
+
+```{r echo=FALSE, message=FALSE}
+library(rpart)
+library(rpart.plot)
+library(randomForest)
+
+reg_tree <- rpart(
+  count ~ ., 
+  data = train_set,
+  method = "anova",
+  control = list(minsplits = 10, minbucket = 3, cp = 0, xval = 10)
+)
+# rpart.plot(reg_tree)
+# plotcp(reg_tree)
+cp_summary <- reg_tree$cptable
+optimal_cp <- cp_summary[7, 1]
+
+reg_tree_pruned <- prune(reg_tree, cp = optimal_cp)
+rpart.plot(reg_tree_pruned) 
+
+pred_tree <- predict(reg_tree_pruned, newdata = test_set)
+mse_tree <- mean((pred_tree - test_set$count)^2)
+```
+
+
+The importance plot generated by the random forest model also confirms that the crime category is a crucial predictor, while the unemployment rate has a relatively higher importance compared to the inflation rate. However, the MSE obtained for the testing set is approximately 6563, which is higher than the other models.
+
+
+```{r echo=FALSE, fig.width=7, message=FALSE}
+set.seed(370)
+forest <- randomForest(
+  count ~ ., 
+  data = train_set,
+  na.action = na.omit
+)
+
+varImpPlot(forest, main = "Variable importance plot (Random forest)")
+
+pred_forest <- predict(forest, newdata = test_set)
+mse_forest <- mean((pred_forest - test_set$count)^2)
+```
+
+
+The plot below displays the MSEs for all methods. The Linear Mixed-Effects model has the smallest MSE, followed by GAM and single regression tree, which have similar MSE values. Despite the limitations of a small dataset and limited predictors, if I had to choose a model from these options for predicting crime statistics in Toronto, I would select the linear mixed-effect model.
+
+```{r echo=FALSE, fig.width=7, message=FALSE}
+mses <- data.frame(
+  method = c("GAM", "GLM", "Linear Mixed-Effects Models", "Single Tree", "Random Forest"),
+  mses = c(glm_MSE, gmod_MSE,lme_MSE, mse_tree, mse_forest)
+) %>% 
+  rename(Method = method, MSE = mses)
+
+mses %>% 
+  ggplot(aes(y = reorder(Method, MSE), x = MSE)) +
+  theme_minimal() +
+  geom_point(size = 1.5) +
+  geom_segment(aes(xend = 0, yend = Method), linetype = "dotted") +
+  labs(x = "MSE", y = NULL, title = "MSE for Each Method")
+```
+
+
+<br>
+
+## 2. Occurrences correlation with neighbourhood profiles
+
+<br>
+
+
+In Figure 4, we plot the top 20 neighbourhoods with the highest number of crime occurrences between 2014 and 2021. 
+
+The highest number of crime occurrences took place in **West Humber-Clairville**, with approximately 4300 recorded instances. **Waterfront Communities** and **Church-Yonge Corridor** also had over 3000 recorded occurrences each.
+
+
+```{r echo=FALSE, fig.width=10, message=FALSE}
+# Top neighbourhoods had crime
+top_crime_neighbour <- crime_data %>% 
+  group_by(neighbourhood) %>% 
+  summarise(
+    count = length(unique(event_unique_id))
+  ) %>% 
+  arrange(desc(count)) %>% 
+  head(20) 
+
+crime_data %>% 
+  group_by(neighbourhood, crime_cat) %>% 
+  summarise(
+    count = length(unique(event_unique_id))
+  ) %>% 
+  filter(
+    neighbourhood %in% top_crime_neighbour$neighbourhood
+  ) %>% 
+  ggplot(aes(reorder(neighbourhood, count), y=count)) +
+  geom_bar(stat="identity", aes(fill = crime_cat)) +
+  scale_fill_viridis_d(direction = -1) +
+  theme_minimal() +
+  coord_flip() +
+  labs(title = "Figure 4: Barplot of Crime Occurrence by Neighbourhood", 
+       subtitle = "Focus on top 20 neighbours between 2014-2021",
+       x  = "Neighbourhood", y = "Number of Crime Occurrence",
+       fill = "Crime Category")
+```
+
+We further investigate the data by visualizing the top five neighbourhoods with the highest number of occurrences in each category in Figure 5. The names of these neighbourhoods are also listed below:
+
+- For auto theft, **West Humber-Clairville** has the highest number of instances.
+
+- For break and enter, **Waterfront Communities** has the highest number of occurrences and **Church-Yonge Corridor** is the second highest.
+
+- **West Humber-Clairville** and **Waterfront Communities** also appear as two of the top five neighbourhoods with the highest number of robbery and firearm discharge occurrences.
+
+- **Church-Yonge Corridor** has the highest number of robbery occurrences.
+
+```{r echo=FALSE, fig.width=10, message=FALSE}
+# Top neighbourhoods for each crime category
+crime_data %>%
+  group_by(neighbourhood, crime_cat) %>% 
+  summarise(
+    count = length(unique(event_unique_id))
+  ) %>% 
+  group_by(crime_cat) %>%
+  slice_max(count, n = 5)  %>% 
+  ggplot(aes(reorder(neighbourhood, count), y=count)) +
+  geom_bar(stat="identity", aes(fill = crime_cat)) +
+  scale_fill_viridis_d(direction = -1) +
+  facet_wrap(~crime_cat, scales = "free_y") +
+  theme_minimal() +
+  coord_flip() +
+  labs(title = "Figure 5: Barplot of Crime Occurrence by Neighbourhood", 
+       subtitle = "Focus on top 5 neighbours in each crime category",
+       x  = "Neighbourhood", y = "Number of Crime Occurrence",
+       fill = "Crime Category")
+```
+
+
+Based on this information, we can conclude that shooting and firearm discharge incidents are mostly concentrated around the edges of the city, whereas auto theft occurs throughout Toronto but is more common in the northwest region. Break and enter, and robbery incidents, on the other hand, are predominantly concentrated in the downtown area of Toronto, where population density is relatively high.
+
+
+The following map provides a better representation of the location of each neighbourhood.
+
+
+### {- .tabset}
+
+#### Neighbourhood Scatters
+<!-- 
+https://plotly.com/r/scattermapbox/
+https://plotly-r.com/maps.html
+https://rstudio-pubs-static.s3.amazonaws.com/990225_5ed3a88ab43248dca24eaa8d4ecda370.html 
+-->
+```{r message=FALSE, echo=FALSE, warning=FALSE}
+# Group crime data by neighborhood
+crime_by_neighb <- crime_data %>% 
+  group_by(hood_id) %>% 
+  summarise(
+    longitude = mean(longitude),
+    latitude = mean(latitude),
+    neighbourhood = first(neighbourhood),
+    counts = length(unique(event_unique_id))
+  )
+
+# Read in Mapbox access token
+MAPBOX_TOKEN <- paste(readLines("resources/files/.mb_token"), collapse="") 
+Sys.setenv('MAPBOX_TOKEN' = MAPBOX_TOKEN)
+
+# Plot mapview
+plot_mapbox(
+    mode = 'scattermapbox'
+  ) %>%
+  add_markers(
+    data = crime_by_neighb,
+    y = ~ latitude,
+    x = ~ longitude,
+    size = ~ counts,
+    sizemode = "area",
+    color = ~ neighbourhood,
+    hoverinfo = "text",
+    text = ~ paste(neighbourhood, ":", counts, "times")
+  ) %>% 
+  layout(
+    title = list(
+      text = "Mapview of Crime Frequency in Neighborhoods",
+      font = list(size = 16, color = "white"),
+      y = 0.95, x = 0.5,
+      xanchor = 'center', yanchor = 'top'
+    ),
+    mapbox = list(
+      style = 'dark', zoom = 9,
+      center = list(lat = median(crime_by_neighb$latitude),
+                    lon = median(crime_by_neighb$longitude))
+    ),
+    # legend = list(orientation = 'h'),
+    showlegend = FALSE
+  ) 
+
+```
+
+#### Occurrence Polygons
+
+```{r message=FALSE, echo=FALSE, warning=FALSE}
+# Generate geometry point for each obs
+crime_filtered <- crime_data %>%
+  st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
+
+# Aggregate data by neighbourhood
+crime_by_neighb_sf <- st_join(crime_filtered, neighbour_data, join = st_intersects) %>%
+  group_by(AREA_NAME) %>%
+  filter(!is.na(AREA_NAME)) %>% 
+  summarize(counts = length(unique(event_unique_id))) 
+
+# Merge neighbourhood_data and crime_data
+crime_by_neighb_sf <- st_join(neighbour_data, crime_by_neighb_sf)
+
+# Create a leaflet map
+pal <- colorNumeric(palette = "Blues", domain = crime_by_neighb_sf$counts)
+crime_by_neighb_sf %>% 
+  leaflet() %>%
+  addProviderTiles("CartoDB.Positron") %>%
+  addPolygons(fillColor = ~pal(counts),
+              fillOpacity = .6,
+              color = "grey",
+              weight = .5,
+              label = ~paste(AREA_NAME.x, ":", counts, "times"),
+              labelOptions = labelOptions(
+                style = list("font-size" = "12px")
+              )) %>%
+  addLegend(position = "bottomright", 
+            title = "Number of Crimes",
+            pal = pal, values = crime_by_neighb_sf$counts)
+```
+
+####  Density Polygons
+```{r message=FALSE, echo=FALSE, warning=FALSE}
+# Generate geometry point for each obs
+crime_filtered <- crime_data %>%
+  filter(year == 2016) %>% 
+  st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
+
+# Aggregate data by neighbourhood
+crime_by_neighb_sf <- st_join(crime_filtered, nb_pop_data, join = st_intersects) %>%
+  group_by(AREA_NAME) %>%
+  filter(!is.na(AREA_NAME)) %>% 
+  summarize(
+    counts = length(unique(event_unique_id)),
+    pop = mean(pop_2016, na.rm = T),
+    density = counts / pop
+  ) %>% 
+  arrange(density) %>% 
+  filter(!is.na(pop))
+
+# Merge neighbourhood_data and crime_data
+crime_by_neighb_sf <- st_join(nb_pop_data, crime_by_neighb_sf)
+
+# Create a leaflet map
+pal <- colorNumeric(palette = "Greens", domain = crime_by_neighb_sf$density)
+crime_by_neighb_sf %>% 
+  leaflet() %>%
+  addProviderTiles("CartoDB.Positron") %>%
+  addPolygons(fillColor = ~pal(density),
+              fillOpacity = .6,
+              color = "grey",
+              weight = .5,
+              label = ~paste(AREA_NAME.x, ":", counts),
+              labelOptions = labelOptions(
+                style = list("font-size" = "12px")
+              )) %>%
+  addLegend(position = "bottomright", 
+            title = "Num of Crime / Population",
+            pal = pal, values = crime_by_neighb_sf$density)
+```
+
+## {- .unlisted}
+
+
+- The map view with polygons proved what we obtained from the previous observations. With the darkest shade indicating the highest number of crimes in the northwest region due to auto theft, and a relatively higher number of crimes in the downtown area of Toronto. In contrast, areas with low population density show lighter shade on the map indicating fewer crimes. 
+
+- The scatter plots provide a more accurate representation of the average location of all crimes that occurred in each neighborhood area. The size of the scatter plots corresponds to the number of crimes, with larger scatter plots indicating higher crime counts. Similarly, larger scatter plots are observed in the northwest region and downtown area, indicating higher crime levels in these areas.
+
+- Regarding the density polygon, it displays the ratio of crime occurrences in 2016 to the population of each neighbourhood in the same year. The darker shades observed in the northwest region and downtown area correspond to the findings we obtained.
+
+
+<br> 
+
+

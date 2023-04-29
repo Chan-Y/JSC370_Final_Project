@@ -1,14 +1,21 @@
 name: "JSC370_Final_Project"
 output_dir: "."
 navbar:
-  title: "JSC370 Final Project"
-  left:
+  title: "Toronto Criminal Statistics"
+  left: 
+  # https://fontawesome.com/v4/icons/
     - text: "Home"
       icon: fa-home
       href: index.html
-    - text: "Visualization"
-      icon: fa-bar-chart fa-lg
-      href: visualization.html
+    # - text: "Visualization"
+    #   icon: fa-bar-chart fa-lg
+    #   href: visualization.html
+    - text: "Method & Result"
+      icon: fa-line-chart fa-lg
+      href: method_result.html
+    - text: "Discussion"
+      icon: fa-key fa-lg
+      href: discussion.html
     - text: "Data Website"
       icon: fa-database fa-lg
       menu:
@@ -31,9 +38,11 @@ navbar:
         - text: "Toronto Open Data"
         - text: "Toronto Neighbourhoods"
           href: https://open.toronto.ca/dataset/neighbourhoods/
+        - text: "Toronto - Demographics"
+          href: https://open.toronto.ca/dataset/wellbeing-toronto-demographics/
     - text: "Report"
       icon: fa-file-pdf-o fa-lg
-      href: resources/files/Report.pdf
+      href: resources/files/FinalReport.pdf
   right:
     - icon: fa-github fa-lg
       href: https://github.com/Chan-Y/JSC370_Final_Project/

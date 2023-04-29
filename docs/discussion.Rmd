@@ -1,0 +1,31 @@
+---
+output: 
+    html_document:
+        toc: TRUE
+        toc_float: TRUE
+---
+
+<br>
+
+# Conclusion
+
+The crime rate in the City of Toronto has varied over time. According to the dataset, the most common types of crimes reported in the city are "Break & Enter" and "Auto Theft" more than "Robbery" and "Firearm Discharge". Moreover, there has been a significant increase in the total number of reported crimes in the last decade, with a peak in 2019. By observing the location of crime offenses in multiple charts, it concludes that the highest number of crimes in the northwest region, and a relatively higher number of crimes in the downtown area of Toronto. In contrast, areas with low population density show fewer crimes. 
+
+In general, inflation and unemployment are important economic indicators that can have an impact on crime rates. In Toronto, inflation has remained relatively stable over the years before 2021, while the unemployment rate has seen some fluctuation, with a peak in 2020 due to the COVID-19 pandemic. In this project, we applied five different models to explore the association between these financial indicators and the number of crimes.  The results from the models showed that the crime category is a significant predictor in the city, but neither of the rates is significant in better-fitted models, which is not under expectation.
+
+In conclusion, our findings suggest that the crime category is the most important predictor of crime rates in the city of Toronto, which could be considered while allocating resources and developing targeted strategies to reduce crime in the city. 
+
+
+<hr>
+
+# Limitation & Improvement
+
+There are several limitations and potential improvements that should be considered for this project.
+
+Firstly, the dataset used in this project is relatively small and has a limited number of predictors. To enhance the accuracy of our models, it would be beneficial to collect and merge additional data on various variables that could influence crime rates, such as income level, education level, age, gender, ethnicity, community policing efforts, and drug and alcohol use.
+
+Secondly, even though the majority of the data in this project was provided by the Toronto Police Service, there may be discrepancies between the features of each dataset for some specifications, such as the relationship between different `premises_type` or `location_type`. This aspect was not explored in this project, although it may be significant for some types of crime.
+
+Additionally, during the exploratory data analysis phase, it might be worth investigating whether there are any seasonal patterns in crime incidents in Toronto, considering that weather conditions can play a significant role in Canada.
+
+<br>
