@@ -42,7 +42,7 @@ navbar:
           href: https://open.toronto.ca/dataset/wellbeing-toronto-demographics/
     - text: "Report"
       icon: fa-file-pdf-o fa-lg
-      href: resources/files/FinalReport.pdf
+      href: https://github.com/Chan-Y/JSC370_Final_Project/blob/main/docs/resources/files/FinalReport.pdf
   right:
     - icon: fa-github fa-lg
       href: https://github.com/Chan-Y/JSC370_Final_Project/
