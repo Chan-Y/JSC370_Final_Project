@@ -30,7 +30,7 @@ Overall, we will provide an overview of the crime situation in the city of Toron
 
 To view the complete pdf report, click [here](https://github.com/Chan-Y/JSC370_Final_Project/blob/main/docs/resources/files/FinalReport.pdf).
 
-To watch a demonstration of this website, click [here](https://play.library.utoronto.ca/watch/7cbb48835688213f364d2ccdc415959f).
+
 
 <br>
 <br>
